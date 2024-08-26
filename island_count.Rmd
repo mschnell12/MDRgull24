@@ -1,0 +1,162 @@
+---
+title: "colony_count"
+author: "Marina Schnell"
+date: "2024-07-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load-packages}
+library(tidyverse)
+library(readxl)
+library(lubridate)
+```
+
+```{r load-data}
+island_count <- read_xlsx("data/mdr24_islandcount.xlsx", sheet = "birds")
+LAGU_count <- read_xlsx("data/mdr24_LAGU.xlsx", sheet = "birds")
+```
+
+```{r plot-on-island-HERG&GBBG}
+
+island_count %>%
+  filter(species %in% c("HERG","GBBG")
+         & location == "on-island"
+         & time == "morning") %>%
+  filter(age != "n") %>%
+  mutate(number = as.numeric(number)) %>%
+  unite(species_age, species, age, sep = "_") %>%
+  ggplot(mapping = aes(date, number, color = species_age)) +
+  geom_point() +
+  geom_line() +
+  scale_color_manual(values = c(GBBG_A = "orange",
+                                GBBG_J = "orange4",
+                                HERG_A = "darkslategray3",
+                                HERG_J = "darkslategray4"),
+                     labels = c(GBBG_A = "GBBG Adult",
+                                GBBG_J = "GBBG Juvenile",
+                                HERG_A = "HERG Adult",
+                                HERG_J = "HERG Juvenile")) +
+  theme(panel.background = element_rect(fill = "grey95")) +
+  labs(title = "7AM On-Island Count 2024: Herring and Great Black-backed Gulls",
+       x = "Date",
+       y = "Number of Individuals",
+       color = "Species and Age")
+```
+
+```{r GBBG-count}
+island_count %>%
+  filter(species %in% c("GBBG")
+         & location == "on-island") %>%
+  filter(age != "n") %>%
+  unite(time_species_age, time, species, age, sep = "_") %>%
+  mutate(number = as.numeric(number)) %>%
+  ggplot(mapping = aes(date, number, color = time_species_age)) +
+  geom_point() +
+  geom_line() +
+  scale_color_manual(values = c(morning_GBBG_A = "orange",
+                                morning_GBBG_J = "orange4",
+                                evening_GBBG_A = "slateblue2",
+                                evening_GBBG_J = "slateblue4"),
+                     labels = c(morning_GBBG_A = "GBBG Adult (Morning)",
+                                morning_GBBG_J = "GBBG Juvenile (Morning)",
+                                evening_GBBG_A = "GBBG Adult (Evening)",
+                                evening_GBBG_J = "GBBG Juvenile (Evening)"))+
+  theme(panel.background = element_rect(fill = "grey95")) +
+  labs(title = "MDR On-Island Count 2024: Great Black-backed Gulls",
+       x = "Date",
+       y = "Number of Individuals",
+       color = "Species, Age, and Time of Count")
+
+```
+
+```{r GBBG-count-evening}
+island_count %>%
+  filter(species %in% c("GBBG")
+         & location == "on-island"
+         & time == "evening") %>%
+  filter(age != "n") %>%
+  unite(time_species_age, time, species, age, sep = "_") %>%
+  mutate(number = as.numeric(number)) %>%
+  ggplot(mapping = aes(date, number, color = time_species_age)) +
+  geom_point() +
+  geom_line() +
+  scale_color_manual(values = c(evening_GBBG_A = "orange",
+                                evening_GBBG_J = "orange4"),
+                     labels = c(evening_GBBG_A = "Adult",
+                                evening_GBBG_J = "Juvenile"))+
+  theme(panel.background = element_rect(fill = "grey95")) +
+  labs(title = "MDR On-Island Evening Count 2024: Great Black-backed Gulls",
+       x = "Date",
+       y = "Number of Individuals",
+       color = "Age Class")
+
+```
+
+```{r plot-phalaropes}
+island_count %>%
+  filter(species == "phalaropes_spp",
+         time == "evening") %>%
+  mutate(number = as.numeric(number)) %>%
+  ggplot(mapping = aes(date, number)) +
+  geom_point() +
+  labs(title = "Phalaropes!",
+       x = "Date",
+       y = "Number of Individuals")
+  
+```
+
+```{r plot}
+
+# unfinished
+
+island_count %>%
+  filter(species %in% c("COEI","GRSH"),
+         time == "morning",
+         age != "C") %>%
+  mutate(number = as.numeric(number)) %>%
+  ggplot(mapping = aes(date, number, fill = species)) +
+  geom_col(position = "dodge") +
+  labs(title = "Birds!",
+       x = "Date",
+       y = "Number of Individuals")
+
+#how to sum COEI males and females?
+
+```
+```{r LAGU-plot}
+LAGU_count %>%
+  separate(col = time, into = c("dateWRONG","time"), sep = " ", convert = TRUE) %>%
+  mutate(dateWRONG = NULL) %>%
+  unite(datetime, c(date, time), sep = " ") %>%
+  mutate(datetime, ymd_hms(datetime)) %>%
+  mutate(datetime = NULL) %>%
+  rename(datetime = `ymd_hms(datetime)`) %>%
+  relocate(datetime, .before = location) %>%
+  ggplot(mapping = aes(datetime, number)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "Laughing Gulls!",
+       x = "Date",
+       y = "Number of Individuals")
+```
+
+```{r species-count-plot}
+island_count %>%
+  group_by(date, time) %>%
+  distinct(species) %>%
+  summarize(n_species = n()) %>%
+  ggplot(mapping = aes(date, n_species, color = time)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "Species Diversity during Island Count",
+       x = "Date",
+       y = "Number of Species Recorded",
+       color = "Time of Count")
+
+# remove counts when we stopped early or only did on-island due to fog
+# make y-axis increments of 1
+```
