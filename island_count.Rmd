@@ -87,7 +87,7 @@ island_count %>%
   scale_color_manual(values = c(evening_GBBG_A = "orange",
                                 evening_GBBG_J = "orange4"),
                      labels = c(evening_GBBG_A = "Adult",
-                                evening_GBBG_J = "Juvenile"))+
+                                evening_GBBG_J = "Juvenile")) +
   theme(panel.background = element_rect(fill = "grey95")) +
   labs(title = "MDR On-Island Evening Count 2024: Great Black-backed Gulls",
        x = "Date",
@@ -145,7 +145,19 @@ LAGU_count %>%
 ```
 
 ```{r species-count-plot}
+
 island_count %>%
+  filter(date != as.Date("2024-06-14") &
+         date != as.Date("2024-06-27") &
+         date != as.Date("2024-07-10") &
+         date != as.Date("2024-07-23") &
+         date != as.Date("2024-08-14")) %>%
+  filter(!(date == as.Date("2024-07-15") &
+         time == "evening")) %>%
+  filter(!(date == as.Date("2024-08-17") &
+         time == "evening")) %>%
+  filter(!(date == as.Date("2024-08-22") &
+         time == "evening")) %>%
   group_by(date, time) %>%
   distinct(species) %>%
   summarize(n_species = n()) %>%
@@ -155,8 +167,15 @@ island_count %>%
   labs(title = "Species Diversity during Island Count",
        x = "Date",
        y = "Number of Species Recorded",
-       color = "Time of Count")
+       color = "Time of Count") +
+  scale_y_continuous(limits = c(0,14), breaks = c(0:14)) +
+  scale_color_manual(values = c(evening = "blue",
+                                morning = "khaki3"),
+                     labels = c(evening = "Evening",
+                                morning = "Morning")) +
+  theme(panel.background = element_rect(fill = "grey98"))
 
-# remove counts when we stopped early or only did on-island due to fog
-# make y-axis increments of 1
+island_count %>%
+  distinct(species)
+
 ```
